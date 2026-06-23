@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KisanStore — स्मार्ट फसल भंडारण सलाह</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="header-inner">
+        <div class="logo">
+            <span class="logo-icon">🌾</span>
+            <div>
+                <span class="logo-text">KisanStore</span>
+                <span class="logo-sub">स्मार्ट भंडारण सलाह</span>
+            </div>
+        </div>
+        <p class="header-tagline">अपनी फसल सही रखें — नुकसान से बचें</p>
+    </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            <span class="hero-title-hi">फसल खराब न हो,</span><br>
+            <span class="hero-title-en">सही तरीके से स्टोर करें</span>
+        </h1>
+        <p class="hero-desc">अपनी फसल चुनें, तापमान-नमी डालें — और पाएं एकदम सटीक भंडारण सलाह।</p>
+        <a href="#form-section" class="hero-cta">अभी जानें →</a>
+    </div>
+    <div class="hero-stats">
+        <div class="stat-card">
+            <span class="stat-num">30%</span>
+            <span class="stat-label">फसल हर साल खराब होती है</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-num">8</span>
+            <span class="stat-label">प्रमुख फसलें कवर</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-num">Free</span>
+            <span class="stat-label">बिल्कुल मुफ़्त</span>
+        </div>
+    </div>
+</section>
+
+<!-- MAIN FORM -->
+<section class="form-section" id="form-section">
+    <div class="container">
+        <h2 class="section-title">अपनी जानकारी भरें</h2>
+
+        <div class="form-card">
+            <!-- Step 1: Crop Selection -->
+            <div class="form-step">
+                <div class="step-label">फसल चुनें</div>
+                <div class="crop-grid" id="cropGrid">
+                    {% for key, crop in crops.items() %}
+                    <button class="crop-btn" data-crop="{{ key }}" onclick="selectCrop('{{ key }}', this)">
+                        <span class="crop-icon">{{ crop.icon }}</span>
+                        <span class="crop-name">{{ crop.hindi }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Step 2: Conditions -->
+            <div class="form-step">
+                <div class="step-label">भंडारण की स्थिति डालें</div>
+                <div class="inputs-grid">
+                    <div class="input-group">
+                        <label for="temp">🌡️ तापमान (°C)</label>
+                        <input type="number" id="temp" placeholder="जैसे: 25" min="-5" max="50" value="25">
+                    </div>
+                    <div class="input-group">
+                        <label for="humidity">💧 वायु नमी (%)</label>
+                        <input type="number" id="humidity" placeholder="जैसे: 65" min="0" max="100" value="65">
+                    </div>
+                    <div class="input-group">
+                        <label for="moisture">🌾 अनाज नमी (%)</label>
+                        <input type="number" id="moisture" placeholder="जैसे: 12" min="0" max="30" value="12">
+                        <small>अनाज वाली फसलों के लिए</small>
+                    </div>
+                    <div class="input-group">
+                        <label for="duration">📅 कितने समय तक रखना है?</label>
+                        <select id="duration">
+                            <option value="1 महीना">1 महीना</option>
+                            <option value="3 महीने">3 महीने</option>
+                            <option value="6 महीने">6 महीने</option>
+                            <option value="12 महीने">12 महीने</option>
+                            <option value="18 महीने">18 महीने से ज़्यादा</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn-submit" onclick="getRecommendation()">
+                    सलाह दें 🔍
+                </button>
+            </div>
+        </div>
+
+        <!-- RESULT SECTION -->
+        <div class="result-section" id="resultSection" style="display:none;">
+            <div class="result-header">
+                <span id="resultIcon" class="result-crop-icon"></span>
+                <div>
+                    <h3 id="resultCropName"></h3>
+                    <span id="riskBadge" class="risk-badge"></span>
+                </div>
+            </div>
+
+            <!-- Ideal Conditions -->
+            <div class="info-grid">
+                <div class="info-card green">
+                    <div class="info-label">आदर्श तापमान</div>
+                    <div class="info-value" id="idealTemp"></div>
+                </div>
+                <div class="info-card blue">
+                    <div class="info-label">आदर्श नमी</div>
+                    <div class="info-value" id="idealHumidity"></div>
+                </div>
+                <div class="info-card orange">
+                    <div class="info-label">कितने दिन रख सकते हैं</div>
+                    <div class="info-value" id="maxDuration"></div>
+                </div>
+                <div class="info-card purple">
+                    <div class="info-label">भंडारण का तरीका</div>
+                    <div class="info-value" id="storageType"></div>
+                </div>
+            </div>
+
+            <!-- Warnings -->
+            <div id="warningsBox" class="warnings-box" style="display:none;">
+                <h4>⚠️ चेतावनी</h4>
+                <ul id="warningsList"></ul>
+            </div>
+
+            <!-- Issues from analysis -->
+            <div id="issuesBox" class="issues-box" style="display:none;">
+                <h4>❌ आपकी स्थिति में समस्याएं</h4>
+                <ul id="issuesList"></ul>
+            </div>
+
+            <!-- Suggestions -->
+            <div class="suggestions-box">
+                <h4>✅ सुझाव</h4>
+                <ul id="suggestionsList"></ul>
+            </div>
+
+            <!-- Tips -->
+            <div class="tips-box">
+                <h4>💡 भंडारण के ज़रूरी टिप्स</h4>
+                <ul id="tipsList"></ul>
+            </div>
+
+            <button class="btn-reset" onclick="resetForm()">← नई फसल देखें</button>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <p>KisanStore — किसानों के लिए, किसानों द्वारा 🌾</p>
+    <p class="footer-sub">यह जानकारी कृषि विशेषज्ञों की सलाह पर आधारित है।</p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
